@@ -1,10 +1,11 @@
 use std::{
     fmt,
-    ops::Mul
+    ops::{
+        Mul, MulAssign
+    }
 };
 
 
-#[derive(Debug)]
 pub struct Matrix {
     contents: Vec<Vec<f32>>
 }
@@ -28,7 +29,6 @@ impl Matrix {
     }
 }
 
-
 impl fmt::Display for Matrix {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.contents.is_empty() { return write!(f, "[ ]") }
@@ -50,7 +50,7 @@ impl fmt::Display for Matrix {
     }
 }
 
-
+/* Scalar multiplication */
 impl Mul<f32> for Matrix {
     type Output = Self;
 
@@ -64,5 +64,16 @@ impl Mul<f32> for Matrix {
             }
         }
         res
+    }
+}
+impl MulAssign<f32> for Matrix {
+    fn mul_assign(&mut self, rhs: f32) {
+        if self.contents.is_empty() { return }
+        let (width, height) = (self.contents[0].len(), self.contents.len());
+        for i in 0..height {
+            for j in 0..width {
+                self.contents[i][j] *= rhs;
+            }
+        }
     }
 }
