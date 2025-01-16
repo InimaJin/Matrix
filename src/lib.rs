@@ -7,19 +7,23 @@ use std::{
 
 
 pub struct Matrix {
-    contents: Vec<Vec<f32>>
+    contents: Vec<Vec<f64>>
 }
 
 impl Matrix {
-    pub fn new(width: usize, height: usize) -> Self {
-        let vec = vec![vec![0.0; width]; height];
-        Self { contents: vec }
+    pub fn new(init: f64, width: usize, height: usize) -> Result<Self, String> {
+        if width == 0 || height == 0 {
+            return Err(String::from("Width and height must be >= 0."));
+        }
+        let vec = vec![vec![init; width]; height];
+        Ok(Self { contents: vec })
     }
 
-    pub fn from_vec(vec: Vec<Vec<f32>>) -> Result<Self, String> {
-        if vec.is_empty() { return Ok(Self { contents: vec![] }) }
+    pub fn from_vec(vec: Vec<Vec<f64>>) -> Result<Self, String> {
+        if vec.is_empty() || vec[0].is_empty() { return Err(String::from("Width and height must be >= 0.")) }
         let width = vec[0].len();
         for vec in &vec[1..] {
+            //All rows must have the same width
             if vec.len() != width {
                 return Err(String::from("Invalid matrix."));
             }
@@ -27,12 +31,21 @@ impl Matrix {
         
         Ok(Self { contents: vec })
     }
+
+    pub fn width(&self) -> usize {
+        self.contents[0].len()
+    }
+    pub fn height(&self) -> usize {
+        self.contents.len()
+    }
+    //Number of
+    pub fn size(&self) -> usize {
+        self.width() * self.height()
+    }
 }
 
 impl fmt::Display for Matrix {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.contents.is_empty() { return write!(f, "[ ]") }
-
         let mut output = String::new();
         let (width, height) = (self.contents[0].len(), self.contents.len());
         for i in 0..height {
@@ -51,24 +64,21 @@ impl fmt::Display for Matrix {
 }
 
 /* Scalar multiplication */
-impl Mul<f32> for Matrix {
+impl Mul<f64> for Matrix {
     type Output = Self;
 
-    fn mul(self, rhs: f32) -> Self {
-        if self.contents.is_empty() { return self }
-        let mut res = self;
-        let (width, height) = (res.contents[0].len(), res.contents.len());
+    fn mul(mut self, rhs: f64) -> Self {
+        let (width, height) = (self.contents[0].len(), self.contents.len());
         for i in 0..height {
             for j in 0..width {
-                res.contents[i][j] *= rhs;
+                self.contents[i][j] *= rhs;
             }
         }
-        res
+        self
     }
 }
-impl MulAssign<f32> for Matrix {
-    fn mul_assign(&mut self, rhs: f32) {
-        if self.contents.is_empty() { return }
+impl MulAssign<f64> for Matrix {
+    fn mul_assign(&mut self, rhs: f64) {
         let (width, height) = (self.contents[0].len(), self.contents.len());
         for i in 0..height {
             for j in 0..width {
