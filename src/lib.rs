@@ -1,4 +1,5 @@
 use std::{
+    error::Error,
     fmt,
     ops::{
         Mul, MulAssign, Add, AddAssign, Sub, SubAssign
@@ -11,25 +12,36 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    pub fn build(init: f64, width: usize, height: usize) -> Result<Self, String> {
+    const DIMENSION_ERR: &'static str = "Width and height must be >= 0.";
+    pub fn build(init: f64, width: usize, height: usize) -> Result<Self, Box<dyn Error>> {
         if width == 0 || height == 0 {
-            return Err(String::from("Width and height must be >= 0."));
+            return Err( Box::from(Self::DIMENSION_ERR) );
         }
         let vec = vec![vec![init; width]; height];
         Ok(Self { content: vec })
     }
 
-    pub fn from_vec(vec: Vec<Vec<f64>>) -> Result<Self, String> {
-        if vec.is_empty() || vec[0].is_empty() { return Err(String::from("Width and height must be >= 0.")) }
+    pub fn from_vec(vec: Vec<Vec<f64>>) -> Result<Self, Box<dyn Error>> {
+        if vec.is_empty() || vec[0].is_empty() { return Err( Box::from(Self::DIMENSION_ERR) ) }
         let width = vec[0].len();
         for vec in &vec[1..] {
             //All rows must have the same width
             if vec.len() != width {
-                return Err(String::from("Invalid matrix."));
+                return Err(Box::from("Inconsistent row sizes."));
             }
         }
         
         Ok(Self { content: vec })
+    }
+
+    
+    /* Creates and returns a scalar multiple 'lambda' of the identity matrix */
+    pub fn scalar_matrix(lambda: f64, width: usize) -> Result<Self, Box<dyn Error>> {
+        let mut matrix = Self::build(0.0, width, width)?;
+        for i in 0..width {
+            matrix.content[i][i] = lambda;
+        }
+        Ok(matrix)
     }
 
     pub fn width(&self) -> usize {
@@ -38,10 +50,11 @@ impl Matrix {
     pub fn height(&self) -> usize {
         self.content.len()
     }
-    //Number of
     pub fn size(&self) -> usize {
         self.width() * self.height()
     }
+
+
 }
 
 impl fmt::Display for Matrix {
@@ -132,7 +145,8 @@ impl Mul<Matrix> for Matrix {
     type Output = Self;
     fn mul(self, rhs: Matrix) -> Self::Output {
         if self.width() != rhs.height() { return self }
-
+        
+        //Does not panic because matrix widths and heights are > 0
         let mut product = Self::build(0.0, rhs.width(), self.height()).unwrap();
         
         for row in 0..self.height() {
