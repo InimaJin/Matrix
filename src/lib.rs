@@ -59,6 +59,7 @@ impl Matrix {
             return None;
         }
         return Some(match self.width() {
+            1 => self.content[0][0],
             2 => self.det_2x2(),
             3 => self.det_3x3(),
             _ => 0.0, // TODO: NxN matrices
