@@ -10,9 +10,24 @@ pub struct Matrix<T> {
     content: Vec<Vec<T>>,
 }
 
-impl<T> Matrix<T>
-where
+//Types implementing this trait can be used to build matrices
+trait MatrixElement<T>:
+    Copy
+    + Clone
+    + Default
+    + PartialEq
+    + PartialOrd
+    + Add<Output = T>
+    + AddAssign
+    + Sub<Output = T>
+    + SubAssign
+    + Mul<Output = T>
+    + MulAssign
+{
+}
+impl<T> MatrixElement<T> for T where
     T: Copy
+        + Clone
         + Default
         + PartialEq
         + PartialOrd
@@ -21,8 +36,11 @@ where
         + Sub<Output = T>
         + SubAssign
         + Mul<Output = T>
-        + MulAssign,
+        + MulAssign
 {
+}
+
+impl<T: MatrixElement<T>> Matrix<T> {
     const DIMENSION_ERR: &'static str = "Width and height must be >= 0.";
     pub fn build(init: T, width: usize, height: usize) -> Result<Self, Box<dyn Error>> {
         if width == 0 || height == 0 {
@@ -140,19 +158,7 @@ impl<T: fmt::Display> fmt::Display for Matrix<T> {
 }
 
 /* Matrix-Scalar multiplication */
-impl<T> Mul<T> for Matrix<T>
-where
-    T: Copy
-        + Default
-        + PartialEq
-        + PartialOrd
-        + Add<Output = T>
-        + AddAssign
-        + Sub<Output = T>
-        + SubAssign
-        + Mul<Output = T>
-        + MulAssign,
-{
+impl<T: MatrixElement<T>> Mul<T> for Matrix<T> {
     type Output = Self;
 
     fn mul(mut self, rhs: T) -> Self::Output {
@@ -164,19 +170,7 @@ where
         self
     }
 }
-impl<T> MulAssign<T> for Matrix<T>
-where
-    T: Copy
-        + Default
-        + PartialEq
-        + PartialOrd
-        + Add<Output = T>
-        + AddAssign
-        + Sub<Output = T>
-        + SubAssign
-        + Mul<Output = T>
-        + MulAssign,
-{
+impl<T: MatrixElement<T>> MulAssign<T> for Matrix<T> {
     fn mul_assign(&mut self, rhs: T) {
         for i in 0..self.height() {
             for j in 0..self.width() {
@@ -187,19 +181,7 @@ where
 }
 
 /* Matrix-Matrix addition and subtraction */
-impl<T> Add<Matrix<T>> for Matrix<T>
-where
-    T: Copy
-        + Default
-        + PartialEq
-        + PartialOrd
-        + Add<Output = T>
-        + AddAssign
-        + Sub<Output = T>
-        + SubAssign
-        + Mul<Output = T>
-        + MulAssign,
-{
+impl<T: MatrixElement<T>> Add<Matrix<T>> for Matrix<T> {
     type Output = Self;
     fn add(mut self, rhs: Matrix<T>) -> Self::Output {
         if self.width() != rhs.width() || self.height() != rhs.height() {
@@ -214,19 +196,7 @@ where
         self
     }
 }
-impl<T> AddAssign<Matrix<T>> for Matrix<T>
-where
-    T: Copy
-        + Default
-        + PartialEq
-        + PartialOrd
-        + Add<Output = T>
-        + AddAssign
-        + Sub<Output = T>
-        + SubAssign
-        + Mul<Output = T>
-        + MulAssign,
-{
+impl<T: MatrixElement<T>> AddAssign<Matrix<T>> for Matrix<T> {
     fn add_assign(&mut self, rhs: Matrix<T>) {
         if self.width() != rhs.width() || self.height() != rhs.height() {
             return;
@@ -239,19 +209,7 @@ where
         }
     }
 }
-impl<T> Sub<Matrix<T>> for Matrix<T>
-where
-    T: Copy
-        + Default
-        + PartialEq
-        + PartialOrd
-        + Add<Output = T>
-        + AddAssign
-        + Sub<Output = T>
-        + SubAssign
-        + Mul<Output = T>
-        + MulAssign,
-{
+impl<T: MatrixElement<T>> Sub<Matrix<T>> for Matrix<T> {
     type Output = Self;
     fn sub(mut self, rhs: Matrix<T>) -> Self::Output {
         if self.width() != rhs.width() || self.height() != rhs.height() {
@@ -265,19 +223,7 @@ where
         self
     }
 }
-impl<T> SubAssign<Matrix<T>> for Matrix<T>
-where
-    T: Copy
-        + Default
-        + PartialEq
-        + PartialOrd
-        + Add<Output = T>
-        + AddAssign
-        + Sub<Output = T>
-        + SubAssign
-        + Mul<Output = T>
-        + MulAssign,
-{
+impl<T: MatrixElement<T>> SubAssign<Matrix<T>> for Matrix<T> {
     fn sub_assign(&mut self, rhs: Matrix<T>) {
         for i in 0..self.height() {
             for j in 0..self.width() {
@@ -288,19 +234,7 @@ where
 }
 
 /* Matrix-Matrix multiplication */
-impl<T> Mul<Matrix<T>> for Matrix<T>
-where
-    T: Copy
-        + Default
-        + PartialEq
-        + PartialOrd
-        + Add<Output = T>
-        + AddAssign
-        + Sub<Output = T>
-        + SubAssign
-        + Mul<Output = T>
-        + MulAssign,
-{
+impl<T: MatrixElement<T>> Mul<Matrix<T>> for Matrix<T> {
     type Output = Self;
     fn mul(self, rhs: Matrix<T>) -> Self::Output {
         if self.width() != rhs.height() {
