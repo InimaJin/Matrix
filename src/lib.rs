@@ -6,13 +6,14 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
 };
 
+#[derive(Clone)]
 pub struct Matrix<T> {
     grid: Vec<Vec<T>>,
 }
 
 /* Types implementing this trait can be used to build matrices.
  * T::default() should be 0. */
-trait MatrixElement<T>:
+pub trait MatrixElement<T>:
     Copy
     + Clone
     + Default
@@ -47,6 +48,7 @@ impl<T> MatrixElement<T> for T where
 
 impl<T: MatrixElement<T>> Matrix<T> {
     const DIMENSION_ERR: &'static str = "Width and height must be >= 0.";
+    /* Constructs a (width x height) matrix in which every entry gets the value of 'init'. */
     pub fn build(init: T, width: usize, height: usize) -> Result<Self, Box<dyn Error>> {
         if width == 0 || height == 0 {
             return Err(Box::from(Self::DIMENSION_ERR));
@@ -55,6 +57,7 @@ impl<T: MatrixElement<T>> Matrix<T> {
         Ok(Self { grid: vec })
     }
 
+    /* Constructs a matrix from a two-dimensional vector. */
     pub fn from_vec(vec: Vec<Vec<T>>) -> Result<Self, Box<dyn Error>> {
         if vec.is_empty() || vec[0].is_empty() {
             return Err(Box::from(Self::DIMENSION_ERR));
@@ -70,7 +73,7 @@ impl<T: MatrixElement<T>> Matrix<T> {
         Ok(Self { grid: vec })
     }
 
-    /* Creates and returns a scalar multiple 'lambda' of the identity matrix */
+    /* Creates and returns a scalar multiple 'lambda' of the identity matrix. */
     pub fn scalar_matrix(lambda: T, width: usize) -> Result<Self, Box<dyn Error>> {
         let mut matrix = Self::build(T::default(), width, width)?;
         for i in 0..width {
@@ -88,21 +91,18 @@ impl<T: MatrixElement<T>> Matrix<T> {
     pub fn size(&self) -> usize {
         self.width() * self.height()
     }
-
     fn swap_rows(&mut self, row1: usize, row2: usize) {
         if row1 < self.grid.len() && row2 < self.grid.len() {
             self.grid.swap(row1, row2);
         }
     }
 
-    /* Transforms the matrix into row echelon form and returns the number of rows swapped in the
-     * process. */
-    pub fn to_row_echelon(&mut self) -> i32 {
-        let mut rows_swapped = 0;
+    /* Transforms the matrix into row echelon form (no full reduction). */
+    pub fn to_row_echelon(&mut self) {
         for pivot_row in 0..self.height() - 1 {
             if pivot_row == self.width() {
                 //Matrix has more rows than columns.
-                return rows_swapped;
+                return;
             }
 
             let mut pivot = self.grid[pivot_row][pivot_row];
@@ -112,7 +112,6 @@ impl<T: MatrixElement<T>> Matrix<T> {
                 for row in pivot_row + 1..self.height() {
                     if self.grid[row][pivot_row] != pivot {
                         self.swap_rows(pivot_row, row);
-                        rows_swapped += 1;
                         swapped = true;
 
                         pivot = self.grid[pivot_row][pivot_row];
@@ -133,18 +132,17 @@ impl<T: MatrixElement<T>> Matrix<T> {
                  * elements below the pivot to become 0 when subtracting the product of pivot and
                  * fac. */
                 let fac = self.grid[row][pivot_row] / pivot;
-                for i in pivot_row..self.width() {
-                    let subtract = fac * self.grid[pivot_row][i];
-                    self.grid[row][i] -= subtract;
+                self.grid[row][pivot_row] = T::default();
+                for col in pivot_row..self.width() {
+                    let subtract = fac * self.grid[pivot_row][col];
+                    self.grid[row][col] -= subtract;
                 }
             }
         }
-
-        rows_swapped
     }
 
-    /* Computes and returns the determinant of a square matrix. Currently only for 2x2 and 3x3
-     * matrices. */
+    /* Computes and returns the determinant of an nxn matrix.
+     * For n > 3, the matrix is cloned and brought into row echelon form first. */
     pub fn det(&self) -> Option<T> {
         if self.width() != self.height() {
             return None;
@@ -153,7 +151,15 @@ impl<T: MatrixElement<T>> Matrix<T> {
             1 => self.grid[0][0],
             2 => self.det_2x2(),
             3 => self.det_3x3(),
-            _ => T::default(), // TODO: NxN matrices
+            _ => {
+                let mut m = self.clone();
+                m.to_row_echelon();
+                let mut d = m.grid[0][0];
+                for i in 1..m.height() {
+                    d *= m.grid[i][i];
+                }
+                d
+            }
         });
     }
     fn det_2x2(&self) -> T {
