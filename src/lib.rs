@@ -91,6 +91,11 @@ impl<T: MatrixElement<T>> Matrix<T> {
     pub fn size(&self) -> usize {
         self.width() * self.height()
     }
+    /* Returns a reference to element at specified position.
+     * Top left is (0,0) */
+    pub fn get(&self, row: usize, col: usize) -> Option<&T> {
+        self.grid.get(row)?.get(col)
+    }
     fn swap_rows(&mut self, row1: usize, row2: usize) {
         if row1 < self.grid.len() && row2 < self.grid.len() {
             self.grid.swap(row1, row2);
