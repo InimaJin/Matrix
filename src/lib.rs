@@ -145,7 +145,7 @@ impl<T: MatrixElement<T>> Matrix<T> {
                  * fac. */
                 let fac = self.grid[row][pivot_row] / pivot;
                 self.grid[row][pivot_row] = T::default();
-                for col in pivot_row..self.width() {
+                for col in pivot_row + 1..self.width() {
                     let subtract = fac * self.grid[pivot_row][col];
                     self.grid[row][col] -= subtract;
                 }
