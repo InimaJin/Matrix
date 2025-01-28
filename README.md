@@ -7,4 +7,4 @@
 
 
 ## Example of usage:
-[!Example usage of the matrix data structure](https://github.com/InimaJin/Matrix/blob/master/assets/example.png)
+![Example usage of the matrix data structure](/assets/example.png)
