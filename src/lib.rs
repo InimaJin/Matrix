@@ -74,7 +74,7 @@ impl<T: MatrixElement<T>> Matrix<T> {
     }
 
     /* Creates and returns a scalar multiple 'lambda' of the identity matrix. */
-    pub fn scalar_matrix(lambda: T, width: usize) -> Result<Self, Box<dyn Error>> {
+    pub fn build_scalar_matrix(lambda: T, width: usize) -> Result<Self, Box<dyn Error>> {
         let mut matrix = Self::build(T::default(), width, width)?;
         for i in 0..width {
             matrix.grid[i][i] = lambda;
@@ -91,12 +91,19 @@ impl<T: MatrixElement<T>> Matrix<T> {
     pub fn size(&self) -> usize {
         self.width() * self.height()
     }
-    /* Returns a reference to element at specified position.
+    /* Returns a reference to the element at position (row, col).
      * Top left is (0,0) */
     pub fn get(&self, row: usize, col: usize) -> Option<&T> {
         self.grid.get(row)?.get(col)
     }
-    fn swap_rows(&mut self, row1: usize, row2: usize) {
+    /* Updates the element at position (row, col) to 'new' and returns the element
+     * previously at that position. */
+    pub fn set(&mut self, row: usize, col: usize, new: T) -> Option<T> {
+        let old = *self.get(row, col)?;
+        self.grid[row][col] = new;
+        Some(old)
+    }
+    pub fn swap_rows(&mut self, row1: usize, row2: usize) {
         if row1 < self.grid.len() && row2 < self.grid.len() {
             self.grid.swap(row1, row2);
         }
@@ -160,6 +167,7 @@ impl<T: MatrixElement<T>> Matrix<T> {
                 let mut m = self.clone();
                 m.to_row_echelon();
                 let mut d = m.grid[0][0];
+                //Determinant as the product of the elements on the main diagonal
                 for i in 1..m.height() {
                     d *= m.grid[i][i];
                 }
@@ -324,5 +332,21 @@ impl<T: MatrixElement<T>> Mul<Matrix<T>> for Matrix<T> {
         }
 
         product
+    }
+}
+
+impl<T: MatrixElement<T>> PartialEq for Matrix<T> {
+    fn eq(&self, other: &Self) -> bool {
+        if self.width() != other.width() || self.height() != other.height() {
+            return false;
+        }
+        for i in 0..self.height() {
+            for j in 0..self.width() {
+                if self.grid[i][j] != other.grid[i][j] {
+                    return false;
+                }
+            }
+        }
+        true
     }
 }
