@@ -48,6 +48,7 @@ impl<T> MatrixElement<T> for T where
 
 impl<T: MatrixElement<T>> Matrix<T> {
     const DIMENSION_ERR: &'static str = "Width and height must be >= 0.";
+
     /* Constructs a (width x height) matrix in which every entry gets the value of 'init'. */
     pub fn build(init: T, width: usize, height: usize) -> Result<Self, Box<dyn Error>> {
         if width == 0 || height == 0 {
@@ -111,42 +112,36 @@ impl<T: MatrixElement<T>> Matrix<T> {
 
     /* Transforms the matrix into row echelon form (no full reduction). */
     pub fn to_row_echelon(&mut self) {
-        for pivot_row in 0..self.height() - 1 {
-            if pivot_row == self.width() {
-                //Matrix has more rows than columns.
-                return;
-            }
+        let zero = T::default();
+        for pivot_position in 0..self.width() - 1 {
+            let mut pivot = self.grid[pivot_position][pivot_position];
+            //Attempt to swap rows in case pivot == 0
+            if pivot == zero {
+                for row in pivot_position + 1..self.height() {
+                    if self.grid[row][pivot_position] != zero {
+                        self.swap_rows(pivot_position, row);
 
-            let mut pivot = self.grid[pivot_row][pivot_row];
-            //Swap rows in case pivot == 0
-            if pivot == T::default() {
-                let mut swapped = false;
-                for row in pivot_row + 1..self.height() {
-                    if self.grid[row][pivot_row] != pivot {
-                        self.swap_rows(pivot_row, row);
-                        swapped = true;
-
-                        pivot = self.grid[pivot_row][pivot_row];
+                        pivot = self.grid[pivot_position][pivot_position];
                         break;
                     }
                 }
-                //If all elements in current column below pivot element are 0 as well.
-                if !swapped {
+                //Pivot hasn't changed, meaning all elements in column below pivot are 0 as well.
+                if pivot == zero {
                     continue;
                 }
             }
-            for row in pivot_row + 1..self.height() {
-                if self.grid[row][pivot_row] == T::default() {
+            for row in pivot_position + 1..self.height() {
+                if self.grid[row][pivot_position] == zero {
                     continue;
                 }
 
                 /* fac is the factor by which the pivot would be multiplied in order for the
                  * elements below the pivot to become 0 when subtracting the product of pivot and
                  * fac. */
-                let fac = self.grid[row][pivot_row] / pivot;
-                self.grid[row][pivot_row] = T::default();
-                for col in pivot_row + 1..self.width() {
-                    let subtract = fac * self.grid[pivot_row][col];
+                let fac = self.grid[row][pivot_position] / pivot;
+                self.grid[row][pivot_position] = zero;
+                for col in pivot_position + 1..self.width() {
+                    let subtract = fac * self.grid[pivot_position][col];
                     self.grid[row][col] -= subtract;
                 }
             }

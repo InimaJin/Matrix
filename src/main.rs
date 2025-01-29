@@ -19,4 +19,8 @@ fn main() {
     let i_2 = Matrix::build_scalar_matrix(2.0, a.width()).unwrap();
 
     assert!(a * i_2 == b);
+    
+    println!("{b}");
+    b.to_row_echelon();
+    println!("{b}");
 }
