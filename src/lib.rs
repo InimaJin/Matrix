@@ -113,7 +113,10 @@ impl<T: MatrixElement<T>> Matrix<T> {
     /* Transforms the matrix into row echelon form (no full reduction). */
     pub fn to_row_echelon(&mut self) {
         let zero = T::default();
-        for pivot_position in 0..self.width() - 1 {
+
+        //The lesser value of width and height is the max number of pivots.
+        let pivot_limit = self.width().min(self.height());
+        for pivot_position in 0..pivot_limit {
             let mut pivot = self.grid[pivot_position][pivot_position];
             //Attempt to swap rows in case pivot == 0
             if pivot == zero {
@@ -139,6 +142,7 @@ impl<T: MatrixElement<T>> Matrix<T> {
                  * elements below the pivot to become 0 when subtracting the product of pivot and
                  * fac. */
                 let fac = self.grid[row][pivot_position] / pivot;
+                //Elements below pivot become 0.
                 self.grid[row][pivot_position] = zero;
                 for col in pivot_position + 1..self.width() {
                     let subtract = fac * self.grid[pivot_position][col];
