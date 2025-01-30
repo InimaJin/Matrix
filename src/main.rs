@@ -4,18 +4,14 @@ use matrix::Matrix;
 
 fn main() {
     //Create a 3x3 matrix:
-    let a: Matrix<f64> = Matrix::from_vec(vec![vec![1.0, 2.0], vec![2.0, 1.0]]).unwrap();
+    let mut a: Matrix<f64> = Matrix::from_vec(vec![
+        vec![1.0, 2.0, 3.0],
+        vec![4.0, 5.0, 6.0],
+        vec![7.0, 8.0, 9.0],
+    ])
+    .unwrap();
 
-    let mut b = a.clone();
-    b *= 2.0;
-
-    /* 3x3 diagonal matrix:
-     * [ [2, 0, 0], [0, 2, 0], [0, 0, 2] ] */
-    let i_2 = Matrix::build_scalar_matrix(2.0, a.width()).unwrap();
-
-    assert!(a * i_2 == b);
-
-    println!("{b}");
-    b.to_row_echelon();
-    println!("{b}");
+    println!("{a}\n");
+    a.transpose();
+    println!("{a}");
 }

@@ -152,6 +152,24 @@ impl<T: MatrixElement<T>> Matrix<T> {
         }
     }
 
+    /* Transposes a matrix. */
+    pub fn transpose(&mut self) {
+        if self.width() == self.height() {
+            self.transpose_quad();
+        }
+        //TODO: mxn matrices
+    }
+    /* Quadratic matrices don't require allocating a new matrix. */
+    fn transpose_quad(&mut self) {
+        for i in 0..self.width() {
+            for j in i + 1..self.width() {
+                let tmp = self.grid[j][i];
+                self.grid[j][i] = self.grid[i][j];
+                self.grid[i][j] = tmp;
+            }
+        }
+    }
+
     /* Computes and returns the determinant of an nxn matrix.
      * For n > 3, the matrix is cloned and brought into row echelon form first. */
     pub fn det(&self) -> Option<T> {
